@@ -78,7 +78,7 @@
     },
     {
       "id": "ep.ballad",
-      "name": "EP Ballad",
+      "name": "Ballad EP",
       "instrument": "ep",
       "file": "ep_ballad.bin",
       "size": 10281276,
@@ -87,7 +87,7 @@
     },
     {
       "id": "ep.ballad2",
-      "name": "EP Ballad 2",
+      "name": "Ballad EP 2",
       "instrument": "ep",
       "file": "ep_ballad2.bin",
       "size": 10293756,
@@ -96,7 +96,7 @@
     },
     {
       "id": "ep.crystal",
-      "name": "EP Crystal",
+      "name": "Crystal EP",
       "instrument": "ep",
       "file": "ep_crystal.bin",
       "size": 10368340,
@@ -105,7 +105,7 @@
     },
     {
       "id": "ep.ember",
-      "name": "EP Ember",
+      "name": "Ember EP",
       "instrument": "ep",
       "file": "ep_ember.bin",
       "size": 10305276,
