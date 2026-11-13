@@ -93,6 +93,15 @@
       "size": 2724673,
       "sha256": "174060243f0e27e5f48974133f1846b0556400e62ab14e5c92e8d424cff7a12d",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_piano.bin"
+    },
+    {
+      "id": "drumstation.xl",
+      "name": "Drumstation Kit XL",
+      "instrument": "drumstation",
+      "file": "drumstation.zip",
+      "size": 7891386,
+      "sha256": "251c8d5c982c78ac5afc8457cd4b311dd827c86abe6ed1c4d63f6740db9bed72",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/drumstation.zip"
     }
   ]
 }
