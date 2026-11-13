@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "version": 1,
+  "updated": "2026-11-13",
+  "base_url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/",
+  "packs": [
+    {
+      "id": "piano.grand",
+      "name": "Grand Piano",
+      "instrument": "piano",
+      "file": "piano.bin",
+      "size": 31059868,
+      "sha256": "212947600d3b95f682f63e538c58534224cdc99f71286c63dd32ce864309192f",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/piano.bin"
+    },
+    {
+      "id": "piano.upright",
+      "name": "Upright Piano",
+      "instrument": "piano",
+      "file": "upright.bin",
+      "size": 32403988,
+      "sha256": "0ce8bf581af8bd8076c5eae894289d976b55bf794f349af9da3f4f04d01137ff",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/upright.bin"
+    },
+    {
+      "id": "sax.soprano",
+      "name": "Soprano Sax",
+      "instrument": "sax",
+      "file": "sax_sop.bin",
+      "size": 5637574,
+      "sha256": "7dfbe016953917917b5c4084a13e9e0cf8f1b1a51c3d2586ff527580f7833cc2",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/sax_sop.bin"
+    },
+    {
+      "id": "sax.alto",
+      "name": "Alto Sax",
+      "instrument": "sax",
+      "file": "sax_alt.bin",
+      "size": 6614186,
+      "sha256": "56dcfdfa2bb54f943ab25d45c7abc0cefb6afec4b367b066f05c13e727d25e67",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/sax_alt.bin"
+    },
+    {
+      "id": "sax.tenor",
+      "name": "Tenor Sax",
+      "instrument": "sax",
+      "file": "sax_ten.bin",
+      "size": 2633678,
+      "sha256": "575e37d69dd796b421681d13d79917f3ee8569b119d9bd1565a8ae9bd9d62a54",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/sax_ten.bin"
+    },
+    {
+      "id": "sax.baritone",
+      "name": "Baritone Sax",
+      "instrument": "sax",
+      "file": "sax_bar.bin",
+      "size": 5813406,
+      "sha256": "43568cc055792495a2b4f756ae13f6b3f213b25709800182f941c23eb39e3cf3",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/sax_bar.bin"
+    }
+  ]
+}
