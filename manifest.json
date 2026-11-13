@@ -61,11 +61,38 @@
     {
       "id": "ep.tines",
       "name": "Tines EP",
-      "instrument": "piano",
+      "instrument": "ep",
       "file": "tines.bin",
       "size": 17090236,
       "sha256": "e4230991ab0d2ae4b846c8f6e87646341aa45079a3199ce524ae1dd46ee6fd32",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/tines.bin"
+    },
+    {
+      "id": "ep.ballad",
+      "name": "Ballad EP",
+      "instrument": "ep",
+      "file": "ep_ballad.bin",
+      "size": 2747115,
+      "sha256": "dc2100a1cf2f0f32eebc9b5ed72397a046de67a2ea2394ae9652436e849fbb9f",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_ballad.bin"
+    },
+    {
+      "id": "ep.dx",
+      "name": "DX Bell",
+      "instrument": "ep",
+      "file": "ep_dx.bin",
+      "size": 2752443,
+      "sha256": "755517240f84c0ba8ef815a11983d793e1f3140ccbde5314fbf4b4f12956ea2c",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_dx.bin"
+    },
+    {
+      "id": "ep.piano",
+      "name": "E.Piano",
+      "instrument": "ep",
+      "file": "ep_piano.bin",
+      "size": 2724673,
+      "sha256": "174060243f0e27e5f48974133f1846b0556400e62ab14e5c92e8d424cff7a12d",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_piano.bin"
     }
   ]
 }
