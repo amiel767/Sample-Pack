@@ -68,33 +68,6 @@
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/tines.bin"
     },
     {
-      "id": "ep.ballad",
-      "name": "Ballad EP",
-      "instrument": "ep",
-      "file": "ep_ballad.bin",
-      "size": 2747115,
-      "sha256": "dc2100a1cf2f0f32eebc9b5ed72397a046de67a2ea2394ae9652436e849fbb9f",
-      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_ballad.bin"
-    },
-    {
-      "id": "ep.dx",
-      "name": "DX Bell",
-      "instrument": "ep",
-      "file": "ep_dx.bin",
-      "size": 2752443,
-      "sha256": "755517240f84c0ba8ef815a11983d793e1f3140ccbde5314fbf4b4f12956ea2c",
-      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_dx.bin"
-    },
-    {
-      "id": "ep.piano",
-      "name": "E.Piano",
-      "instrument": "ep",
-      "file": "ep_piano.bin",
-      "size": 2724673,
-      "sha256": "174060243f0e27e5f48974133f1846b0556400e62ab14e5c92e8d424cff7a12d",
-      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_piano.bin"
-    },
-    {
       "id": "drumstation.xl",
       "name": "Drumstation Kit XL",
       "instrument": "drumstation",
@@ -102,6 +75,42 @@
       "size": 7891386,
       "sha256": "251c8d5c982c78ac5afc8457cd4b311dd827c86abe6ed1c4d63f6740db9bed72",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/drumstation.zip"
+    },
+    {
+      "id": "ep.ballad",
+      "name": "EP Ballad",
+      "instrument": "ep",
+      "file": "ep_ballad.bin",
+      "size": 10281276,
+      "sha256": "3c27ad051178a116c60427e6cbc9100474fa40f97b96e5940dc16fdec999a95a",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_ballad.bin"
+    },
+    {
+      "id": "ep.ballad2",
+      "name": "EP Ballad 2",
+      "instrument": "ep",
+      "file": "ep_ballad2.bin",
+      "size": 10293756,
+      "sha256": "08d1ae34057c31236b398611a011e16c69ca1290a2765da4146f1990e0ef9944",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_ballad2.bin"
+    },
+    {
+      "id": "ep.silver",
+      "name": "Silver",
+      "instrument": "ep",
+      "file": "ep_silver.bin",
+      "size": 10368340,
+      "sha256": "8e7880ad8468baedd8e33a45dacfa60a9979847e681f6957ed8a7bad3fee1cb3",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_silver.bin"
+    },
+    {
+      "id": "ep.7",
+      "name": "EP7",
+      "instrument": "ep",
+      "file": "ep7.bin",
+      "size": 10305276,
+      "sha256": "2cb49464c8b99ce818a26c74dc69b7471d2238d6613e96b482ea015617aa44e7",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep7.bin"
     }
   ]
 }
