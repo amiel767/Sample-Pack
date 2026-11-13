@@ -7,8 +7,12 @@ Banques d'échantillons pour l'application **Æther Keys**, séparées de l'APK.
 | Grand Piano | Piano à queue | 31 Mo |
 | Upright Piano | Piano droit | 32 Mo |
 | Soprano / Alto / Tenor / Baritone Sax | Sax | 3–7 Mo chacun |
+| Drumstation Kit XL | Batterie (Drumstation) | 8 Mo |
 
-Les **pianos électriques (EP)** restent embarqués dans l'APK.
+Les **pianos électriques (EP)** restent embarqués dans l'APK, tout comme le kit
+Drumstation de base (58 instruments, 1,2 Mo). Le pack XL l'enrichit : il ajoute
+près de 900 kicks, caisses claires, charlestons, toms et percussions issus de
+trois banques, et se télécharge depuis la fenêtre des packs de la Drumstation.
 
 ## Comment l'app récupère les packs
 
