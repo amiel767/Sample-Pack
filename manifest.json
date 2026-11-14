@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "version": 1,
-  "updated": "2026-11-13",
+  "updated": "2026-11-14",
   "base_url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/",
   "packs": [
     {
@@ -81,8 +81,8 @@
       "name": "Ballad EP",
       "instrument": "ep",
       "file": "ep_ballad.bin",
-      "size": 10281276,
-      "sha256": "3c27ad051178a116c60427e6cbc9100474fa40f97b96e5940dc16fdec999a95a",
+      "size": 10577988,
+      "sha256": "da70c93c8c81accad0632d309aea1e370cbd4c2e421715922b6c1a6e5da22e5e",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_ballad.bin"
     },
     {
@@ -90,8 +90,8 @@
       "name": "Ballad EP 2",
       "instrument": "ep",
       "file": "ep_ballad2.bin",
-      "size": 10293756,
-      "sha256": "08d1ae34057c31236b398611a011e16c69ca1290a2765da4146f1990e0ef9944",
+      "size": 10642308,
+      "sha256": "85c5a7ba08d2716b2042707861d5eec51f9bf2f26cca4273910e0e9a84635ce3",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_ballad2.bin"
     },
     {
@@ -99,8 +99,8 @@
       "name": "Crystal EP",
       "instrument": "ep",
       "file": "ep_crystal.bin",
-      "size": 10368340,
-      "sha256": "8e7880ad8468baedd8e33a45dacfa60a9979847e681f6957ed8a7bad3fee1cb3",
+      "size": 10537348,
+      "sha256": "d4c4f8bc175c2583dde2ad3860cea7de70d66ee05703a609cd1678730e9d1aec",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_crystal.bin"
     },
     {
@@ -108,9 +108,18 @@
       "name": "Ember EP",
       "instrument": "ep",
       "file": "ep_ember.bin",
-      "size": 10305276,
-      "sha256": "2cb49464c8b99ce818a26c74dc69b7471d2238d6613e96b482ea015617aa44e7",
+      "size": 10603268,
+      "sha256": "076d3972c773f0c6d027dd109b85dcba8b4505217f05ff8d903bcb443cf4c2c4",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_ember.bin"
+    },
+    {
+      "id": "ep.romantic",
+      "name": "Romantic EP",
+      "instrument": "ep",
+      "file": "ep_romantic.bin",
+      "size": 2880748,
+      "sha256": "d73180c9829eed70f3417a25d9fd605a6f10161be98591d67bd73c849f3ba304",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_romantic.bin"
     }
   ]
 }
