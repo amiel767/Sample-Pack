@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sheets — prototype (JSX React)</title>
+<style>
+  html,body{margin:0;height:100%;background:#0d0f13;color:#e8ecf2;
+    font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  #root{height:100%}
+  #boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:10px;text-align:center;padding:24px}
+  #boot.gone{display:none}
+  #boot.err{color:#ff8a8a}
+  #boot code{color:#f2b84a;font-size:12px}
+</style>
+</head>
+<body>
+<div id="boot">
+  <div>Chargement du composant…</div>
+  <code>SheetsHome.jsx</code>
+</div>
+<div id="root"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.6/babel.min.js"></script>
+
+<script>
+  // Babel transpile en silence : sans handler, une erreur laisse la page sur "Chargement".
+  window.addEventListener("error", function (e) {
+    var b = document.getElementById("boot");
+    if (!b) return;
+    b.classList.remove("gone"); b.classList.add("err");
+    b.innerHTML = "Erreur : " + (e.message || e.error || "inconnue");
+  });
+  setTimeout(function () {
+    var b = document.getElementById("boot");
+    if (!b || b.classList.contains("gone")) return;
+    b.innerHTML = "Toujours en chargement. Librairies : React=" + (typeof React) +
+      " ReactDOM=" + (typeof ReactDOM) + " Babel=" + (typeof Babel);
+  }, 8000);
+</script>
+
+<script>
+  // Le JSX complet, charge depuis le fichier brut du depot (texte, pas de HTML autour).
+  // On le recupere puis on le transmet a Babel, comme un <script type="text/babel">.
+  fetch("./SheetsHome.jsx")
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status + " sur SheetsHome.jsx");
+      return r.text();
+    })
+    .then(function (jsx) {
+      // Dans un script babel inline, `import` et `export default` sont des erreurs de
+      // syntaxe (ce n'est pas un module). On les retire et on reprend les hooks du
+      // React global (les UMD ci-dessus).
+      var src = jsx
+        .replace(/^\s*import\s+.*?;\s*$/gm, "")
+        .replace(/export\s+default\s+function\s+(\w+)/, "function $1");
+      var preamble =
+        "const { useState, useEffect, useMemo, useRef, useCallback, useReducer, " +
+        "useLayoutEffect, useContext, Fragment, createElement } = React;\n";
+      var mount =
+        "\ntry { ReactDOM.createRoot(document.getElementById('root'))" +
+        ".render(<SheetsHome />); " +
+        "document.getElementById('boot').classList.add('gone'); } " +
+        "catch (err) { var b=document.getElementById('boot'); " +
+        "b.classList.remove('gone'); b.classList.add('err'); " +
+        "b.textContent = 'Erreur : ' + err.message; }\n";
+      var blob = new Blob([preamble, src, mount], { type: "text/javascript" });
+      var tag = document.createElement("script");
+      tag.type = "text/babel";
+      tag.src = URL.createObjectURL(blob);
+      document.head.appendChild(tag);
+      // Babel standalone scrute le DOM : forcer une passe sur le noeud ajoute.
+      if (window.Babel && Babel.transformScriptTags) Babel.transformScriptTags();
+    })
+    .catch(function (err) {
+      var b = document.getElementById("boot");
+      b.classList.remove("gone"); b.classList.add("err");
+      b.textContent = "Erreur : " + err.message;
+    });
+</script>
+</body>
+</html>
