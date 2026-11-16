@@ -1,10 +1,21 @@
 import React, { useMemo, useState } from "react";
 
+const DEFAULT_SET_ID = "default";
+
+// Sets systeme : jamais supprimables, jamais deplaces. `Default` recoit les Sheets
+// orphelins (Set supprime, ou Sheet cree hors Set).
+const SYSTEM_SETS = [
+  { id: "all", name: "All", system: true, icon: "library" },
+  { id: "favorites", name: "Favorites", system: true, icon: "star" },
+  { id: DEFAULT_SET_ID, name: "Default", system: true, icon: "folder" },
+];
+
+// Sets « premium » : icone monochrome, plus de pastille de couleur.
 const INITIAL_SETS = [
-  { id: "live", name: "Live set", parentId: null, order: 0, color: "#8FB2E8" },
-  { id: "acoustic", name: "Acoustic", parentId: null, order: 1, color: "#39A58A" },
-  { id: "morning", name: "Morning set", parentId: "acoustic", order: 2, color: "#D49A55" },
-  { id: "ideas", name: "Ideas", parentId: null, order: 3, color: "#9A83D8" },
+  { id: "live", name: "Live set", parentId: null, order: 0, icon: "music" },
+  { id: "acoustic", name: "Acoustic", parentId: null, order: 1, icon: "guitar" },
+  { id: "morning", name: "Morning set", parentId: "acoustic", order: 0, icon: "sunrise" },
+  { id: "ideas", name: "Ideas", parentId: null, order: 2, icon: "lightbulb" },
 ];
 
 const INITIAL_SHEETS = [
@@ -16,7 +27,7 @@ const INITIAL_SHEETS = [
     favorite: true,
     updatedAt: 6,
     createdAt: 2,
-    setIds: ["live", "ideas"],
+    setIds: ["live"],
     sections: [
       {
         name: "Verse",
@@ -41,7 +52,7 @@ const INITIAL_SHEETS = [
     favorite: false,
     updatedAt: 5,
     createdAt: 1,
-    setIds: ["acoustic", "morning"],
+    setIds: ["morning"],
     sections: [
       {
         name: "Intro",
@@ -119,8 +130,9 @@ const FLAT = [
   "G♭", "G", "A♭", "A", "B♭", "B",
 ];
 
-const MAJOR_SCALE = [0, 2, 4, 5, 7, 9, 11];
-const MINOR_SCALE = [0, 2, 3, 5, 7, 8, 10];
+const SET_ICONS = [
+  "folder", "music", "guitar", "sunrise", "lightbulb", "star",
+];
 
 function pitchClass(note) {
   const match = String(note).match(/^([A-G])([#b♯♭]?)/);
@@ -136,6 +148,340 @@ function pitchClass(note) {
 function spellPitch(pc, preferFlat = false) {
   const scale = preferFlat ? FLAT : SHARP;
   return scale[((pc % 12) + 12) % 12];
+}
+
+/* ---------------------------------------------------------------
+   Gestion des Sets — fonctions pures (etat -> etat).
+   Un Set vit dans un arbre (parentId + order). Les fonctions
+   renvoient de NOUVEAUX tableaux ; le composant les passe a setSets.
+   --------------------------------------------------------------- */
+
+function getSetChildren(sets, parentId = null) {
+  return sets
+    .filter(set => (set.parentId ?? null) === parentId)
+    .sort((a, b) => a.order - b.order);
+}
+
+function getSetDescendants(sets, setId) {
+  const descendants = [];
+
+  function collect(parentId) {
+    getSetChildren(sets, parentId).forEach(child => {
+      descendants.push(child.id);
+      collect(child.id);
+    });
+  }
+
+  collect(setId);
+  return descendants;
+}
+
+// Un Set ne peut pas devenir l'enfant d'un de ses propres descendants
+// (cycle), ni descendre sous `Default` qui est un Set systeme.
+function canMoveSet(sets, setId, targetParentId) {
+  if (setId === targetParentId) return false;
+  if (targetParentId === DEFAULT_SET_ID) return false;
+
+  return !getSetDescendants(sets, setId).includes(targetParentId);
+}
+
+function normalizeSetOrder(sets, parentId = null) {
+  const order = new Map(
+    getSetChildren(sets, parentId).map((set, i) => [set.id, i])
+  );
+
+  return sets.map(set =>
+    order.has(set.id)
+      ? { ...set, order: order.get(set.id) }
+      : set
+  );
+}
+
+function moveSet(sets, setId, targetParentId) {
+  if (!canMoveSet(sets, setId, targetParentId)) {
+    return sets;
+  }
+
+  const next = sets.map(set =>
+    set.id === setId
+      ? { ...set, parentId: targetParentId }
+      : set
+  );
+
+  return normalizeSetOrder(next, targetParentId);
+}
+
+function reorderSet(sets, setId, targetIndex) {
+  const current = sets.find(set => set.id === setId);
+
+  if (!current) return sets;
+
+  const siblings = getSetChildren(sets, current.parentId ?? null)
+    .filter(set => set.id !== setId);
+
+  const index = Math.max(
+    0,
+    Math.min(targetIndex, siblings.length)
+  );
+
+  siblings.splice(index, 0, current);
+
+  const orderMap = new Map(
+    siblings.map((set, i) => [set.id, i])
+  );
+
+  return sets.map(set =>
+    orderMap.has(set.id)
+      ? { ...set, order: orderMap.get(set.id) }
+      : set
+  );
+}
+
+function createSet(sets, name, parentId = null, icon = "folder") {
+  return [
+    ...sets,
+    {
+      id: `set-${Date.now()}`,
+      name: name.trim(),
+      parentId,
+      icon,
+      order: getSetChildren(sets, parentId).length,
+    },
+  ];
+}
+
+function renameSet(sets, setId, name) {
+  if (!name.trim()) return sets;
+
+  return sets.map(set =>
+    set.id === setId
+      ? { ...set, name: name.trim() }
+      : set
+  );
+}
+
+function changeSetIcon(sets, setId, icon) {
+  return sets.map(set =>
+    set.id === setId
+      ? { ...set, icon }
+      : set
+  );
+}
+
+// Supprimer un Set : ses Sheets directs rejoignent `Default`,
+// ses sous-Sets remontent d'un niveau (ils gardent leur contenu).
+function deleteSet(sets, sheets, setId) {
+  const target = sets.find(set => set.id === setId);
+
+  if (!target || target.id === DEFAULT_SET_ID) {
+    return { sets, sheets };
+  }
+
+  const nextSets = sets
+    .filter(set => set.id !== setId)
+    .map(set =>
+      set.parentId === setId
+        ? { ...set, parentId: target.parentId }
+        : set
+    );
+
+  const nextSheets = sheets.map(sheet =>
+    sheet.setIds?.includes(setId)
+      ? { ...sheet, setIds: [DEFAULT_SET_ID] }
+      : sheet
+  );
+
+  return {
+    sets: normalizeSetOrder(nextSets, target.parentId),
+    sheets: nextSheets,
+  };
+}
+
+/* ---------------------------------------------------------------
+   Gestion des Sheets — appartenance EXCLUSIVE : `setIds` ne porte
+   qu'un seul element. Deplacer un Sheet remplace son Set.
+   --------------------------------------------------------------- */
+
+function moveSheetToSet(sheets, sheetId, targetSetId) {
+  return sheets.map(sheet =>
+    sheet.id === sheetId
+      ? {
+          ...sheet,
+          setIds: [targetSetId || DEFAULT_SET_ID],
+          updatedAt: Date.now(),
+        }
+      : sheet
+  );
+}
+
+function removeSheetFromSet(sheets, sheetId) {
+  return moveSheetToSet(sheets, sheetId, DEFAULT_SET_ID);
+}
+
+function toggleSheetFavorite(sheets, sheetId) {
+  return sheets.map(sheet =>
+    sheet.id === sheetId
+      ? {
+          ...sheet,
+          favorite: !sheet.favorite,
+          updatedAt: Date.now(),
+        }
+      : sheet
+  );
+}
+
+// La duplication reprend le contenu musical et le Set, jamais le statut Favori.
+function duplicateSheet(sheets, sheetId) {
+  const original = sheets.find(sheet => sheet.id === sheetId);
+
+  if (!original) return sheets;
+
+  const now = Date.now();
+
+  return [
+    {
+      ...structuredClone(original),
+      id: `sheet-${now}`,
+      title: `${original.title} (Copy)`,
+      favorite: false,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+    },
+    ...sheets,
+  ];
+}
+
+// Corbeille : suppression douce. On retient le Set d'origine pour restaurer au bon endroit.
+function deleteSheet(sheets, sheetId) {
+  const now = Date.now();
+
+  return sheets.map(sheet =>
+    sheet.id === sheetId
+      ? {
+          ...sheet,
+          deletedAt: now,
+          originalSetId: sheet.setIds?.[0] || DEFAULT_SET_ID,
+        }
+      : sheet
+  );
+}
+
+function restoreSheet(sheets, sets, sheetId) {
+  return sheets.map(sheet => {
+    if (sheet.id !== sheetId) return sheet;
+
+    const originalSetExists =
+      sheet.originalSetId === DEFAULT_SET_ID ||
+      sets.some(set => set.id === sheet.originalSetId);
+
+    return {
+      ...sheet,
+      deletedAt: null,
+      setIds: [
+        originalSetExists
+          ? sheet.originalSetId
+          : DEFAULT_SET_ID,
+      ],
+    };
+  });
+}
+
+function permanentlyDeleteSheet(sheets, sheetId) {
+  return sheets.filter(sheet => sheet.id !== sheetId);
+}
+
+function emptyTrash(sheets) {
+  return sheets.filter(sheet => !sheet.deletedAt);
+}
+
+function getTrashSheets(sheets) {
+  return sheets.filter(sheet => Boolean(sheet.deletedAt));
+}
+
+// Les vues normales n'affichent jamais la corbeille.
+function getActiveSheets(sheets) {
+  return sheets.filter(sheet => !sheet.deletedAt);
+}
+
+/* ---------------------------------------------------------------
+   Recherche et tri
+   --------------------------------------------------------------- */
+
+// La recherche ignore le Set selectionne : elle parcourt toute la bibliotheque.
+function searchLibrary(sheets, sets, query) {
+  const value = query.trim().toLowerCase();
+
+  if (!value) {
+    return { sheets: [], sets: [] };
+  }
+
+  return {
+    sheets: sheets.filter(sheet =>
+      sheet.title.toLowerCase().includes(value) ||
+      sheet.key?.toLowerCase().includes(value) ||
+      sheet.sections.some(section =>
+        section.name.toLowerCase().includes(value) ||
+        (section.chords || []).some(chord =>
+          chord.toLowerCase().includes(value)
+        )
+      )
+    ),
+
+    sets: sets.filter(set =>
+      set.name.toLowerCase().includes(value)
+    ),
+  };
+}
+
+const SHEET_SORT_OPTIONS = [
+  { id: "modified", label: "Recently modified" },
+  { id: "created", label: "Recently created" },
+  { id: "name-asc", label: "Name A–Z" },
+  { id: "name-desc", label: "Name Z–A" },
+  { id: "custom", label: "Custom order" },
+];
+
+function getVisibleSheets({
+  sheets,
+  selectedSetId,
+  sortMode = "modified",
+}) {
+  let result = [...sheets];
+
+  if (selectedSetId === "favorites") {
+    result = result.filter(sheet => sheet.favorite);
+  } else if (selectedSetId && selectedSetId !== "all") {
+    result = result.filter(sheet =>
+      sheet.setIds?.includes(selectedSetId)
+    );
+  }
+
+  switch (sortMode) {
+    case "name-asc":
+      result.sort((a, b) => a.title.localeCompare(b.title));
+      break;
+
+    case "name-desc":
+      result.sort((a, b) => b.title.localeCompare(a.title));
+      break;
+
+    case "created":
+      result.sort((a, b) => b.createdAt - a.createdAt);
+      break;
+
+    case "custom":
+      // ordre manuel : le rang stocke sur le Sheet prime, sinon l'ordre d'ajout
+      result.sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
+      break;
+
+    case "modified":
+    default:
+      result.sort((a, b) => b.updatedAt - a.updatedAt);
+      break;
+  }
+
+  return result;
 }
 
 function transposeRoot(root, fromKey, toKey) {
@@ -201,38 +547,38 @@ function nashvilleChord(chord, key, mode) {
 
   if (root === null) return chord;
 
-  const scale = mode === "minor"
-    ? MINOR_SCALE
-    : MAJOR_SCALE;
+  const distance = (root - tonic + 12) % 12;
 
   const intervals = mode === "minor"
+    ? [0, 2, 3, 5, 7, 8, 10]
+    : [0, 2, 4, 5, 7, 9, 11];
+
+  const degrees = mode === "minor"
     ? ["1", "2", "♭3", "4", "5", "♭6", "♭7"]
     : ["1", "2", "3", "4", "5", "6", "7"];
 
-  const distance = (root - tonic + 12) % 12;
+  const exactIndex = intervals.indexOf(distance);
 
-  let closest = 0;
+  if (exactIndex !== -1) {
+    return degrees[exactIndex] + match[2];
+  }
+
+  let closestIndex = 0;
   let smallestDifference = Infinity;
 
-  scale.forEach((interval, index) => {
+  intervals.forEach((interval, index) => {
     const difference = Math.abs(interval - distance);
 
     if (difference < smallestDifference) {
       smallestDifference = difference;
-      closest = index;
+      closestIndex = index;
     }
   });
 
-  let degree = intervals[closest];
+  const accidental =
+    distance < intervals[closestIndex] ? "♭" : "♯";
 
-  if (smallestDifference !== 0) {
-    const accidental =
-      distance < scale[closest] ? "♭" : "♯";
-
-    degree = accidental + (closest + 1);
-  }
-
-  return degree + match[2];
+  return accidental + (closestIndex + 1) + match[2];
 }
 
 function displayChord(chord, sheet, notation) {
@@ -282,6 +628,81 @@ function Icon({ name, size = 16 }) {
         <circle cx="16" cy="18" r="1" />
       </>
     ),
+    dots: (
+      <>
+        <circle cx="12" cy="5" r="1.4" />
+        <circle cx="12" cy="12" r="1.4" />
+        <circle cx="12" cy="19" r="1.4" />
+      </>
+    ),
+    library: (
+      <>
+        <path d="M4 5h5v14H4zM11 5h4v14h-4zM17 6l3 .8-3 12.4-3-.8" />
+      </>
+    ),
+    star: <path d="m12 4 2.4 5 5.6.8-4 3.9 1 5.5-5-2.7-5 2.7 1-5.5-4-3.9 5.6-.8z" />,
+    folder: <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />,
+    music: (
+      <>
+        <path d="M9 18V6l10-2v12" />
+        <circle cx="6.5" cy="18" r="2.5" />
+        <circle cx="16.5" cy="16" r="2.5" />
+      </>
+    ),
+    guitar: (
+      <>
+        <path d="M15 4.5 19.5 9M13.5 6 18 10.5" />
+        <path d="M12.6 7.4a3.4 3.4 0 0 0-4.8 0l-.7.7a3.4 3.4 0 0 0 0 4.8" />
+        <circle cx="8" cy="16" r="4" />
+        <circle cx="8" cy="16" r="1.1" />
+      </>
+    ),
+    sunrise: (
+      <>
+        <path d="M12 3v4M5.6 8.6l2.8 2.8M3 15h4M17 15h4M15.6 11.4l2.8-2.8" />
+        <path d="M8 18a4 4 0 0 1 8 0" />
+        <path d="M3 21h18" />
+      </>
+    ),
+    lightbulb: (
+      <>
+        <path d="M9.5 17h5M10 20h4" />
+        <path d="M12 3a6 6 0 0 0-3.5 10.9c.6.4.9 1 .9 1.6v.5h5.2v-.5c0-.6.3-1.2.9-1.6A6 6 0 0 0 12 3z" />
+      </>
+    ),
+    trash: (
+      <>
+        <path d="M4 7h16M9 7V5h6v2M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12" />
+        <path d="M10 11v6M14 11v6" />
+      </>
+    ),
+    copy: (
+      <>
+        <rect x="9" y="9" width="11" height="11" rx="2" />
+        <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+      </>
+    ),
+    restore: (
+      <>
+        <path d="M4 12a8 8 0 1 0 3-6.2" />
+        <path d="M4 4v5h5" />
+      </>
+    ),
+    pencil: (
+      <>
+        <path d="M4 20h4L20 8l-4-4L4 16z" />
+        <path d="m14 6 4 4" />
+      </>
+    ),
+    palette: (
+      <>
+        <path d="M12 3a9 9 0 0 0 0 18c1.4 0 2-1 2-2 0-1.3-1-1.4-1-2.5 0-.8.7-1.5 1.5-1.5H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z" />
+        <circle cx="7.5" cy="11" r="1" />
+        <circle cx="10" cy="7.5" r="1" />
+        <circle cx="14.5" cy="7.5" r="1" />
+      </>
+    ),
+    x: <path d="M6 6l12 12M18 6 6 18" />,
   };
 
   return (
@@ -346,7 +767,14 @@ function SheetRow({
   onSelect,
   onFavorite,
   onDragStart,
+  onDuplicate,
+  onDelete,
+  inTrash,
+  onRestore,
+  onPurge,
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <div
       className={`sheet-row ${active ? "is-active" : ""}`}
@@ -359,7 +787,7 @@ function SheetRow({
           onSelect();
         }
       }}
-      draggable
+      draggable={!inTrash}
       onDragStart={onDragStart}
     >
       <span className="drag-handle">
@@ -404,6 +832,87 @@ function SheetRow({
         {sheet.key}
       </span>
 
+      <div className="row-menu-wrap">
+        <button
+          type="button"
+          className="row-menu-button"
+          aria-label="Sheet actions"
+          onClick={event => {
+            event.stopPropagation();
+            setMenuOpen(value => !value);
+          }}
+        >
+          <Icon name="dots" size={15} />
+        </button>
+
+        {menuOpen && (
+          <div
+            className="row-menu"
+            onClick={event => event.stopPropagation()}
+          >
+            {inTrash ? (
+              <>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onRestore();
+                  }}
+                >
+                  <Icon name="restore" size={13} />
+                  Restore
+                </button>
+
+                <button
+                  className="danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onPurge();
+                  }}
+                >
+                  <Icon name="trash" size={13} />
+                  Delete permanently
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onFavorite();
+                  }}
+                >
+                  <Icon name="star" size={13} />
+                  {sheet.favorite
+                    ? "Remove favorite"
+                    : "Add favorite"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDuplicate();
+                  }}
+                >
+                  <Icon name="copy" size={13} />
+                  Duplicate
+                </button>
+
+                <button
+                  className="danger"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onDelete();
+                  }}
+                >
+                  <Icon name="trash" size={13} />
+                  Move to trash
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+
       <span className="row-chevron">
         <Icon name="chevron" size={14} />
       </span>
@@ -419,7 +928,13 @@ function SetTree({
   onMove,
   draggedSet,
   setDraggedSet,
+  onRename,
+  onChangeIcon,
+  onDelete,
 }) {
+  const [menuFor, setMenuFor] = useState(null);
+  const [iconFor, setIconFor] = useState(null);
+
   const children = useMemo(() => {
     const map = {};
 
@@ -441,22 +956,24 @@ function SetTree({
   function renderBranch(parentId = "root", depth = 0) {
     return (children[parentId] || []).map(set => (
       <React.Fragment key={set.id}>
-        <button
+        <div
           className={`set-row ${
             selected === set.id ? "selected" : ""
           }`}
-          style={{
-            "--depth": depth,
-            "--set-color": set.color,
-          }}
+          style={{ "--depth": depth }}
+          role="button"
+          tabIndex={0}
           onClick={() => onSelect(set.id)}
+          onKeyDown={event => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              onSelect(set.id);
+            }
+          }}
           draggable
           onDragStart={event => {
             setDraggedSet(set.id);
-            event.dataTransfer.setData(
-              "text/set-id",
-              set.id
-            );
+            event.dataTransfer.setData("text/set-id", set.id);
           }}
           onDragOver={event => event.preventDefault()}
           onDrop={event => {
@@ -473,12 +990,88 @@ function SetTree({
             setDraggedSet(null);
           }}
         >
-          <span className="set-marker" />
+          <span className="set-icon">
+            <Icon name={set.icon || "folder"} size={13} />
+          </span>
+
           <span className="set-name">{set.name}</span>
+
           {(children[set.id] || []).length > 0 && (
             <span className="set-child-mark">⌄</span>
           )}
-        </button>
+
+          <button
+            type="button"
+            className="set-menu-button"
+            aria-label="Set actions"
+            onClick={event => {
+              event.stopPropagation();
+              setMenuFor(menuFor === set.id ? null : set.id);
+            }}
+          >
+            <Icon name="dots" size={14} />
+          </button>
+
+          {menuFor === set.id && (
+            <div
+              className="row-menu set-menu"
+              onClick={event => event.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  setMenuFor(null);
+                  const name = window.prompt("Set name", set.name);
+                  if (name != null) onRename(set.id, name);
+                }}
+              >
+                <Icon name="pencil" size={13} />
+                Rename
+              </button>
+
+              <button
+                onClick={() => {
+                  setMenuFor(null);
+                  setIconFor(set.id);
+                }}
+              >
+                <Icon name="palette" size={13} />
+                Change icon
+              </button>
+
+              <button
+                className="danger"
+                onClick={() => {
+                  setMenuFor(null);
+                  onDelete(set.id);
+                }}
+              >
+                <Icon name="trash" size={13} />
+                Delete set
+              </button>
+            </div>
+          )}
+
+          {iconFor === set.id && (
+            <div
+              className="icon-picker"
+              onClick={event => event.stopPropagation()}
+            >
+              {SET_ICONS.map(name => (
+                <button
+                  key={name}
+                  className={set.icon === name ? "chosen" : ""}
+                  aria-label={name}
+                  onClick={() => {
+                    setIconFor(null);
+                    onChangeIcon(set.id, name);
+                  }}
+                >
+                  <Icon name={name} size={14} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {renderBranch(set.id, depth + 1)}
       </React.Fragment>
@@ -493,7 +1086,9 @@ function SetTree({
         }`}
         onClick={() => onSelect("all")}
       >
-        <span className="system-symbol">▦</span>
+        <span className="set-icon">
+          <Icon name="library" size={13} />
+        </span>
         <span className="set-name">All</span>
       </button>
 
@@ -503,8 +1098,22 @@ function SetTree({
         }`}
         onClick={() => onSelect("favorites")}
       >
-        <span className="system-symbol">★</span>
+        <span className="set-icon">
+          <Icon name="star" size={13} />
+        </span>
         <span className="set-name">Favorites</span>
+      </button>
+
+      <button
+        className={`set-row system-row ${
+          selected === DEFAULT_SET_ID ? "selected" : ""
+        }`}
+        onClick={() => onSelect(DEFAULT_SET_ID)}
+      >
+        <span className="set-icon">
+          <Icon name="folder" size={13} />
+        </span>
+        <span className="set-name">Default</span>
       </button>
 
       <div className="sets-divider" />
@@ -545,73 +1154,50 @@ export default function SheetsHome({
   const [draggedSet, setDraggedSet] = useState(null);
   const [draggedSheet, setDraggedSheet] = useState(null);
 
+  // La corbeille est une vue a part : elle montre les Sheets supprimes et
+  // n'est pas un Set (elle reste independante de All / Favorites / Sets).
+  const isTrash = selectedSet === "__trash";
+
   const visibleSheets = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    if (isTrash) {
+      return getVisibleSheets({
+        sheets: getTrashSheets(sheets),
+        selectedSetId: "all",
+        sortMode: sort,
+      });
+    }
 
-    const list = sheets.filter(sheet => {
-      const inSet =
-        selectedSet === "all" ||
-        (
-          selectedSet === "favorites"
-            ? sheet.favorite
-            : sheet.setIds.includes(selectedSet)
-        );
+    // La recherche est globale : elle ignore le Set selectionne.
+    const library = getActiveSheets(sheets);
 
-      const inSearch =
-        !q ||
-        sheet.title.toLowerCase().includes(q) ||
-        sheet.key.toLowerCase().includes(q) ||
-        sheet.sections.some(section =>
-          section.name.toLowerCase().includes(q) ||
-          (section.chords || []).some(chord =>
-            chord.toLowerCase().includes(q)
-          )
-        );
+    if (query.trim()) {
+      return searchLibrary(library, sets, query).sheets;
+    }
 
-      return inSet && inSearch;
+    return getVisibleSheets({
+      sheets: library,
+      selectedSetId: selectedSet,
+      sortMode: sort,
     });
-
-    if (sort === "modified") {
-      list.sort((a, b) => b.updatedAt - a.updatedAt);
-    }
-
-    if (sort === "created") {
-      list.sort((a, b) => b.createdAt - a.createdAt);
-    }
-
-    if (sort === "az") {
-      list.sort((a, b) =>
-        a.title.localeCompare(b.title)
-      );
-    }
-
-    if (sort === "za") {
-      list.sort((a, b) =>
-        b.title.localeCompare(a.title)
-      );
-    }
-
-    return list;
-  }, [sheets, selectedSet, query, sort]);
+  }, [sheets, sets, selectedSet, query, sort, isTrash]);
 
   const matchingSets = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    if (!query.trim()) return [];
 
-    return q
-      ? sets.filter(set =>
-          set.name.toLowerCase().includes(q)
-        )
-      : [];
-  }, [sets, query]);
+    return searchLibrary(
+      getActiveSheets(sheets),
+      sets,
+      query
+    ).sets;
+  }, [sheets, sets, query]);
+
+  const trashCount = useMemo(
+    () => getTrashSheets(sheets).length,
+    [sheets]
+  );
 
   function toggleFavorite(id) {
-    setSheets(current =>
-      current.map(sheet =>
-        sheet.id === id
-          ? { ...sheet, favorite: !sheet.favorite }
-          : sheet
-      )
-    );
+    setSheets(current => toggleSheetFavorite(current, id));
   }
 
   function createSet() {
@@ -619,53 +1205,83 @@ export default function SheetsHome({
 
     if (!name?.trim()) return;
 
-    const id = `set-${Date.now()}`;
+    const next = createSet(sets, name, null, "folder");
 
-    setSets(current => [
-      ...current,
-      {
-        id,
-        name: name.trim(),
-        parentId: null,
-        color: COLORS.accent,
-        order: current.length,
-      },
-    ]);
-
-    setSelectedSet(id);
+    setSets(next);
+    setSelectedSet(next[next.length - 1].id);
   }
 
   function moveSet(sourceId, targetId) {
-    setSets(current =>
-      current.map(set =>
-        set.id === sourceId
-          ? { ...set, parentId: targetId }
-          : set
-      )
-    );
+    setSets(current => moveSet(current, sourceId, targetId));
   }
 
+  function renameSetById(id, name) {
+    setSets(current => renameSet(current, id, name));
+  }
+
+  function changeSetIconById(id, icon) {
+    setSets(current => changeSetIcon(current, id, icon));
+  }
+
+  function deleteSetById(id) {
+    if (!window.confirm("Delete this Set? Its Sheets move to Default.")) {
+      return;
+    }
+
+    const next = deleteSet(sets, sheets, id);
+
+    setSets(next.sets);
+    setSheets(next.sheets);
+
+    if (selectedSet === id) setSelectedSet("all");
+  }
+
+  // Appartenance exclusive : deposer un Sheet sur un Set remplace son Set.
   function addSheetToSet(setId) {
     if (!draggedSheet) return;
 
     setSheets(current =>
-      current.map(sheet =>
-        sheet.id === draggedSheet
-          ? {
-              ...sheet,
-              setIds: sheet.setIds.includes(setId)
-                ? sheet.setIds
-                : [...sheet.setIds, setId],
-            }
-          : sheet
-      )
+      moveSheetToSet(current, draggedSheet, setId)
     );
 
     setDraggedSheet(null);
   }
 
+  function duplicateSheetById(id) {
+    setSheets(current => duplicateSheet(current, id));
+  }
+
+  function deleteSheetById(id) {
+    setSheets(current => deleteSheet(current, id));
+
+    if (activeSheet === id) setActiveSheet(null);
+  }
+
+  function restoreSheetById(id) {
+    setSheets(current => restoreSheet(current, sets, id));
+  }
+
+  function purgeSheetById(id) {
+    setSheets(current => permanentlyDeleteSheet(current, id));
+
+    if (activeSheet === id) setActiveSheet(null);
+  }
+
+  function emptyTrashNow() {
+    if (!window.confirm("Delete every Sheet in the trash?")) return;
+
+    setSheets(current => emptyTrash(current));
+    setActiveSheet(null);
+  }
+
   function createSheet() {
-    const id = `sheet-${Date.now()}`;
+    const now = Date.now();
+    const id = `sheet-${now}`;
+
+    const inRealSet =
+      selectedSet !== "all" &&
+      selectedSet !== "favorites" &&
+      !isTrash;
 
     const next = {
       id,
@@ -673,13 +1289,9 @@ export default function SheetsHome({
       key: "C",
       mode: "major",
       favorite: false,
-      updatedAt: Date.now(),
-      createdAt: Date.now(),
-      setIds:
-        selectedSet !== "all" &&
-        selectedSet !== "favorites"
-          ? [selectedSet]
-          : [],
+      updatedAt: now,
+      createdAt: now,
+      setIds: [inRealSet ? selectedSet : DEFAULT_SET_ID],
       sections: [
         {
           name: "Intro",
@@ -692,6 +1304,7 @@ export default function SheetsHome({
 
     setSheets(current => [next, ...current]);
     setActiveSheet(id);
+    setSelectedSet(inRealSet ? selectedSet : DEFAULT_SET_ID);
   }
 
   return (
@@ -761,6 +1374,9 @@ export default function SheetsHome({
               onMove={moveSet}
               draggedSet={draggedSet}
               setDraggedSet={setDraggedSet}
+              onRename={renameSetById}
+              onChangeIcon={changeSetIconById}
+              onDelete={deleteSetById}
             />
 
             <div className="set-drop-hint">
@@ -775,15 +1391,19 @@ export default function SheetsHome({
             <div className="sheets-toolbar">
               <div className="current-heading">
                 <span className="current-title">
-                  {query
-                    ? "Search results"
-                    : selectedSet === "all"
-                      ? "All Sheets"
-                      : selectedSet === "favorites"
-                        ? "Favorites"
-                        : sets.find(
-                            set => set.id === selectedSet
-                          )?.name || "Sheets"}
+                  {isTrash
+                    ? "Trash"
+                    : query
+                      ? "Search results"
+                      : selectedSet === "all"
+                        ? "All Sheets"
+                        : selectedSet === "favorites"
+                          ? "Favorites"
+                          : selectedSet === DEFAULT_SET_ID
+                            ? "Default"
+                            : sets.find(
+                                set => set.id === selectedSet
+                              )?.name || "Sheets"}
                 </span>
 
                 <span className="count">
@@ -792,6 +1412,31 @@ export default function SheetsHome({
               </div>
 
               <div className="toolbar-actions">
+                <button
+                  className={`trash-button ${
+                    isTrash ? "on" : ""
+                  }`}
+                  onClick={() =>
+                    setSelectedSet(isTrash ? "all" : "__trash")
+                  }
+                  aria-label="Trash"
+                >
+                  <Icon name="trash" size={14} />
+                  Trash
+                  {trashCount > 0 && (
+                    <span className="trash-count">{trashCount}</span>
+                  )}
+                </button>
+
+                {isTrash && trashCount > 0 && (
+                  <button
+                    className="empty-trash-button"
+                    onClick={emptyTrashNow}
+                  >
+                    Empty trash
+                  </button>
+                )}
+
                 <div className="sort-wrap">
                   <button
                     className="sort-button"
@@ -802,34 +1447,32 @@ export default function SheetsHome({
                     <Icon name="sort" size={14} />
                     <span>Sort</span>
                     <span className="sort-current">
-                      {{
-                        modified: "Recent",
-                        created: "Created",
-                        az: "A–Z",
-                        za: "Z–A",
-                      }[sort]}
+                      {
+                        {
+                          modified: "Recent",
+                          created: "Created",
+                          "name-asc": "A–Z",
+                          "name-desc": "Z–A",
+                          custom: "Custom",
+                        }[sort]
+                      }
                     </span>
                   </button>
 
                   {sortOpen && (
                     <div className="sort-menu">
-                      {[
-                        ["modified", "Recently modified"],
-                        ["created", "Recently created"],
-                        ["az", "Name A–Z"],
-                        ["za", "Name Z–A"],
-                      ].map(([value, label]) => (
+                      {SHEET_SORT_OPTIONS.map(option => (
                         <button
-                          key={value}
+                          key={option.id}
                           className={
-                            sort === value ? "chosen" : ""
+                            sort === option.id ? "chosen" : ""
                           }
                           onClick={() => {
-                            setSort(value);
+                            setSort(option.id);
                             setSortOpen(false);
                           }}
                         >
-                          {label}
+                          {option.label}
                         </button>
                       ))}
                     </div>
@@ -855,12 +1498,14 @@ export default function SheetsHome({
                 {matchingSets.map(set => (
                   <button
                     key={set.id}
-                    onClick={() => setSelectedSet(set.id)}
+                    onClick={() => {
+                      setSelectedSet(set.id);
+                      setQuery("");
+                    }}
                   >
-                    <span
-                      className="set-marker"
-                      style={{ "--set-color": set.color }}
-                    />
+                    <span className="set-icon">
+                      <Icon name={set.icon || "folder"} size={13} />
+                    </span>
                     {set.name}
                     <Icon name="chevron" size={12} />
                   </button>
@@ -891,12 +1536,25 @@ export default function SheetsHome({
                     active={activeSheet === sheet.id}
                     notation={notation}
                     melodyNames={melodyNames}
+                    inTrash={isTrash}
                     onSelect={() => {
                       setActiveSheet(sheet.id);
                       onOpenSheet(sheet.id);
                     }}
                     onFavorite={() =>
                       toggleFavorite(sheet.id)
+                    }
+                    onDuplicate={() =>
+                      duplicateSheetById(sheet.id)
+                    }
+                    onDelete={() =>
+                      deleteSheetById(sheet.id)
+                    }
+                    onRestore={() =>
+                      restoreSheetById(sheet.id)
+                    }
+                    onPurge={() =>
+                      purgeSheetById(sheet.id)
                     }
                   />
                 </div>
@@ -1210,13 +1868,17 @@ export default function SheetsHome({
           background: ${COLORS.accent};
         }
 
-        .set-marker {
-          width: 7px;
-          height: 7px;
-          border-radius: 2px;
-          background: var(--set-color);
+        .set-icon {
+          width: 15px;
+          height: 15px;
           flex: none;
+          display: grid;
+          place-items: center;
+          color: ${COLORS.muted};
         }
+
+        .set-row.selected .set-icon { color: ${COLORS.accent}; }
+        .set-row:hover .set-icon { color: #D6E2F3; }
 
         .set-name {
           overflow: hidden;
@@ -1230,14 +1892,31 @@ export default function SheetsHome({
           font-size: 13px;
         }
 
-        .system-row { font-weight: 650; }
-
-        .system-symbol {
-          width: 7px;
-          text-align: center;
-          color: ${COLORS.muted};
-          font-size: 12px;
+        .set-menu-button {
+          width: 20px;
+          height: 20px;
+          flex: none;
+          display: grid;
+          place-items: center;
+          border: 0;
+          border-radius: 5px;
+          background: transparent;
+          color: ${COLORS.faint};
+          cursor: pointer;
+          opacity: 0;
         }
+
+        .set-row:hover .set-menu-button,
+        .set-row.selected .set-menu-button {
+          opacity: 1;
+        }
+
+        .set-menu-button:hover {
+          background: rgba(255,255,255,.07);
+          color: #fff;
+        }
+
+        .system-row { font-weight: 650; }
 
         .sets-divider {
           height: 1px;
@@ -1427,6 +2106,7 @@ export default function SheetsHome({
             minmax(160px,1.1fr)
             24px
             39px
+            22px
             13px;
           align-items: center;
           column-gap: 7px;
@@ -1565,6 +2245,167 @@ export default function SheetsHome({
           color: #59677C;
           display: grid;
           place-items: center;
+        }
+
+        .row-menu-wrap {
+          position: relative;
+          display: grid;
+          place-items: center;
+        }
+
+        .row-menu-button {
+          width: 22px;
+          height: 22px;
+          display: grid;
+          place-items: center;
+          border: 0;
+          border-radius: 6px;
+          background: transparent;
+          color: #59677C;
+          cursor: pointer;
+          opacity: 0;
+        }
+
+        .sheet-row:hover .row-menu-button,
+        .sheet-row.is-active .row-menu-button {
+          opacity: 1;
+        }
+
+        .row-menu-button:hover {
+          background: rgba(255,255,255,.07);
+          color: #fff;
+        }
+
+        .row-menu {
+          position: absolute;
+          top: calc(100% + 4px);
+          right: 0;
+          z-index: 30;
+          min-width: 158px;
+          padding: 4px;
+          display: flex;
+          flex-direction: column;
+          gap: 1px;
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 9px;
+          background: #1B2534;
+          box-shadow: 0 12px 28px rgba(0,0,0,.45);
+        }
+
+        .row-menu button {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          height: 27px;
+          padding: 0 8px;
+          border: 0;
+          border-radius: 6px;
+          background: transparent;
+          color: #D6DFEC;
+          font-size: 10px;
+          text-align: left;
+          cursor: pointer;
+        }
+
+        .row-menu button:hover {
+          background: rgba(255,255,255,.07);
+          color: #fff;
+        }
+
+        .row-menu button.danger { color: #E68A8A; }
+
+        .row-menu button.danger:hover {
+          background: rgba(224,80,80,.14);
+        }
+
+        .set-menu { left: 8px; right: auto; }
+
+        .icon-picker {
+          position: absolute;
+          top: calc(100% + 4px);
+          left: 8px;
+          z-index: 31;
+          padding: 5px;
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 2px;
+          border: 1px solid rgba(255,255,255,.1);
+          border-radius: 9px;
+          background: #1B2534;
+          box-shadow: 0 12px 28px rgba(0,0,0,.45);
+        }
+
+        .icon-picker button {
+          width: 26px;
+          height: 26px;
+          display: grid;
+          place-items: center;
+          border: 0;
+          border-radius: 6px;
+          background: transparent;
+          color: #93A0B4;
+          cursor: pointer;
+        }
+
+        .icon-picker button:hover {
+          background: rgba(255,255,255,.07);
+          color: #fff;
+        }
+
+        .icon-picker button.chosen {
+          background: rgba(145,181,233,.18);
+          color: ${COLORS.accent};
+        }
+
+        .trash-button {
+          height: 26px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0 9px;
+          border: 1px solid rgba(255,255,255,.09);
+          border-radius: 8px;
+          background: rgba(255,255,255,.03);
+          color: #AEBBCC;
+          font-size: 10px;
+          cursor: pointer;
+        }
+
+        .trash-button:hover { color: #fff; }
+
+        .trash-button.on {
+          border-color: rgba(145,181,233,.4);
+          background: rgba(145,181,233,.14);
+          color: #fff;
+        }
+
+        .trash-count {
+          min-width: 15px;
+          height: 15px;
+          padding: 0 4px;
+          display: grid;
+          place-items: center;
+          border-radius: 99px;
+          background: rgba(145,181,233,.28);
+          color: #EAF1FB;
+          font-size: 8px;
+          font-weight: 750;
+        }
+
+        .empty-trash-button {
+          height: 26px;
+          padding: 0 9px;
+          border: 1px solid rgba(224,80,80,.3);
+          border-radius: 8px;
+          background: rgba(224,80,80,.1);
+          color: #E68A8A;
+          font-size: 10px;
+          cursor: pointer;
+        }
+
+        .empty-trash-button:hover {
+          background: rgba(224,80,80,.18);
+          color: #fff;
         }
 
         .list-footer {
@@ -1797,6 +2638,7 @@ export default function SheetsHome({
               minmax(105px,1fr)
               20px
               34px
+              18px
               10px;
             column-gap: 4px;
           }
