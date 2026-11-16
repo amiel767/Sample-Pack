@@ -120,6 +120,33 @@
       "size": 2880748,
       "sha256": "d73180c9829eed70f3417a25d9fd605a6f10161be98591d67bd73c849f3ba304",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_romantic.bin"
+    },
+    {
+      "id": "piano.upright_mellow",
+      "name": "Upright Mellow",
+      "instrument": "piano",
+      "file": "upright_mellow.bin",
+      "size": 27564378,
+      "sha256": "f6a83b96e0d8f3c18aa582d2585fde87db7178f19dea4a68ef52d602e7fc4e61",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/upright_mellow.bin"
+    },
+    {
+      "id": "piano.upright_felt",
+      "name": "Upright Felt",
+      "instrument": "piano",
+      "file": "upright_felt.bin",
+      "size": 27668265,
+      "sha256": "54d834889e548c4a105603bf6d99b2a679e5398e1774d72429d1e478116dff32",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/upright_felt.bin"
+    },
+    {
+      "id": "piano.grand_felt",
+      "name": "Grand Felt",
+      "instrument": "piano",
+      "file": "grand_felt.bin",
+      "size": 19197991,
+      "sha256": "f37178e1ea657359e1c68fda246cf8c1ab9f42a9d0796ad0f9237eb7d5a614ac",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/grand_felt.bin"
     }
   ]
 }
