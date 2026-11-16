@@ -147,6 +147,24 @@
       "size": 19197991,
       "sha256": "f37178e1ea657359e1c68fda246cf8c1ab9f42a9d0796ad0f9237eb7d5a614ac",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/grand_felt.bin"
+    },
+    {
+      "id": "piano.black_upright",
+      "name": "Black Upright",
+      "instrument": "piano",
+      "file": "black_upright.bin",
+      "size": 15080731,
+      "sha256": "a0e76dc109e384c1586b7bdd7cf9a7febf930812ae2bf57fa1aae578b097acf7",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/black_upright.bin"
+    },
+    {
+      "id": "piano.studio_upright",
+      "name": "Studio Upright",
+      "instrument": "piano",
+      "file": "studio_upright.bin",
+      "size": 14599077,
+      "sha256": "e9dcf225b5448626a91a5466d43fb03a904aaea2dd272ba6a3944b9bdd8bdd25",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/studio_upright.bin"
     }
   ]
 }
