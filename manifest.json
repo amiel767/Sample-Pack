@@ -165,6 +165,69 @@
       "size": 26139506,
       "sha256": "9ef7f010db917c30cd5d02a1f273be0fe43bb763c74cf86033047471de7006a8",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/studio_upright.bin"
+    },
+    {
+      "id": "ep.rhodes",
+      "name": "Rhodes",
+      "instrument": "ep",
+      "file": "ep_rhodes.bin",
+      "size": 17186236,
+      "sha256": "c9eaf9f734c4b21a3a0ca01c723021856579a86d120142ed6196aa9cf2d901da",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ep_rhodes.bin"
+    },
+    {
+      "id": "accordion.classic",
+      "name": "Accordion",
+      "instrument": "accordion",
+      "file": "accordion.bin",
+      "size": 7297012,
+      "sha256": "51b1c7fa4381dc9a7cc933f446d44ecfb3f7f476cb3f4c11d23e390a918531b2",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/accordion.bin"
+    },
+    {
+      "id": "brass.ensemble",
+      "name": "Brass",
+      "instrument": "brass",
+      "file": "brass.bin",
+      "size": 19586260,
+      "sha256": "ccdd36bb5c6e16d07646e710a98ef8d63fe491a5f451bea96baf8bdff9de3eb0",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/brass.bin"
+    },
+    {
+      "id": "strings.ensemble",
+      "name": "Strings",
+      "instrument": "strings",
+      "file": "strings.bin",
+      "size": 8721204,
+      "sha256": "7a9d6798e06946627205dc46146acd9494fa32501df1daf0d0273005d2ed8e27",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/strings.bin"
+    },
+    {
+      "id": "pad.synth",
+      "name": "Synth Pad",
+      "instrument": "pad",
+      "file": "synth_pad.bin",
+      "size": 6432820,
+      "sha256": "f19e10e2c1b6d0ca8fca7594a29b4ed8897143cd6ab3e3248d48fbd2996ad4d8",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/synth_pad.bin"
+    },
+    {
+      "id": "pad.worship",
+      "name": "Worship Pad",
+      "instrument": "pad",
+      "file": "worship_pad.bin",
+      "size": 1568196,
+      "sha256": "e2808ea56f8be472a68f4c31a81eec98ba5bf908db8c9a6896900a68dbe42314",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/worship_pad.bin"
+    },
+    {
+      "id": "drumstation.newstage",
+      "name": "New Stage Pads",
+      "instrument": "drumstation",
+      "file": "drumstation_newstage.zip",
+      "size": 101933,
+      "sha256": "fb0e674702123eb510f6e456a79268b3ce150741b0c7c780205df6b6058b013c",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/drumstation_newstage.zip"
     }
   ]
 }
