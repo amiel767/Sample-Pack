@@ -1,4 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, {
+  useMemo,
+  useState,
+  useRef,
+  useLayoutEffect,
+} from "react";
+import { createPortal } from "react-dom";
 
 const DEFAULT_SET_ID = "default";
 
@@ -759,6 +765,133 @@ function Preview({ sheet, notation, melodyNames }) {
   );
 }
 
+// Menu flottant rendu dans `document.body` : la liste des Sheets a un
+// `overflow: auto`, donc un menu `absolute` y est coupe. Le portail sort le menu
+// du contexte d'empilement et le positionne lui-meme (haut si le bas manque).
+function FloatingMenu({
+  open,
+  anchorRef,
+  onClose,
+  className = "",
+  children,
+}) {
+  const menuRef = useRef(null);
+  const [position, setPosition] = useState(null);
+
+  useLayoutEffect(() => {
+    if (!open || !anchorRef?.current) return;
+
+    let frame;
+
+    function updatePosition() {
+      const anchor = anchorRef.current;
+      const menu = menuRef.current;
+
+      if (!anchor || !menu) return;
+
+      const rect = anchor.getBoundingClientRect();
+      const menuRect = menu.getBoundingClientRect();
+
+      const margin = 10;
+      const gap = 6;
+
+      const availableBelow = window.innerHeight - rect.bottom - margin;
+      const availableAbove = rect.top - margin;
+
+      const openUp =
+        availableBelow < menuRect.height + gap &&
+        availableAbove > availableBelow;
+
+      const maxHeight = Math.max(
+        100,
+        (openUp ? availableAbove : availableBelow) - gap
+      );
+
+      const left = Math.max(
+        margin,
+        Math.min(
+          rect.right - menuRect.width,
+          window.innerWidth - menuRect.width - margin
+        )
+      );
+
+      const top = openUp
+        ? Math.max(
+            margin,
+            rect.top - Math.min(menuRect.height, maxHeight) - gap
+          )
+        : Math.min(rect.bottom + gap, window.innerHeight - margin);
+
+      setPosition({
+        top,
+        left,
+        maxHeight,
+        visibility: "visible",
+      });
+    }
+
+    function scheduleUpdate() {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(updatePosition);
+    }
+
+    function handlePointerDown(event) {
+      if (
+        menuRef.current?.contains(event.target) ||
+        anchorRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+
+      onClose?.();
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") {
+        onClose?.();
+      }
+    }
+
+    scheduleUpdate();
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", scheduleUpdate);
+    window.addEventListener("scroll", scheduleUpdate, true);
+
+    return () => {
+      cancelAnimationFrame(frame);
+
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", scheduleUpdate);
+      window.removeEventListener("scroll", scheduleUpdate, true);
+    };
+  }, [open, anchorRef, onClose]);
+
+  if (!open || typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
+    <div
+      ref={menuRef}
+      className={`floating-menu-layer ${className}`}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        visibility: "hidden",
+        ...position,
+      }}
+      onClick={event => event.stopPropagation()}
+    >
+      {children}
+    </div>,
+    document.body
+  );
+}
+
 function SheetRow({
   sheet,
   active,
@@ -774,6 +907,7 @@ function SheetRow({
   onPurge,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButtonRef = useRef(null);
 
   return (
     <div
@@ -835,6 +969,8 @@ function SheetRow({
       <div className="row-menu-wrap">
         <button
           type="button"
+          ref={menuButtonRef}
+          aria-expanded={menuOpen}
           className="row-menu-button"
           aria-label="Sheet actions"
           onClick={event => {
@@ -845,72 +981,72 @@ function SheetRow({
           <Icon name="dots" size={15} />
         </button>
 
-        {menuOpen && (
-          <div
-            className="row-menu"
-            onClick={event => event.stopPropagation()}
-          >
-            {inTrash ? (
-              <>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onRestore();
-                  }}
-                >
-                  <Icon name="restore" size={13} />
-                  Restore
-                </button>
+        <FloatingMenu
+          open={menuOpen}
+          anchorRef={menuButtonRef}
+          onClose={() => setMenuOpen(false)}
+          className="row-menu"
+        >
+          {inTrash ? (
+            <>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onRestore();
+                }}
+              >
+                <Icon name="restore" size={13} />
+                Restore
+              </button>
 
-                <button
-                  className="danger"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onPurge();
-                  }}
-                >
-                  <Icon name="trash" size={13} />
-                  Delete permanently
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onFavorite();
-                  }}
-                >
-                  <Icon name="star" size={13} />
-                  {sheet.favorite
-                    ? "Remove favorite"
-                    : "Add favorite"}
-                </button>
+              <button
+                className="danger"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onPurge();
+                }}
+              >
+                <Icon name="trash" size={13} />
+                Delete permanently
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onFavorite();
+                }}
+              >
+                <Icon name="star" size={13} />
+                {sheet.favorite
+                  ? "Remove favorite"
+                  : "Add favorite"}
+              </button>
 
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDuplicate();
-                  }}
-                >
-                  <Icon name="copy" size={13} />
-                  Duplicate
-                </button>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onDuplicate();
+                }}
+              >
+                <Icon name="copy" size={13} />
+                Duplicate
+              </button>
 
-                <button
-                  className="danger"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onDelete();
-                  }}
-                >
-                  <Icon name="trash" size={13} />
-                  Move to trash
-                </button>
-              </>
-            )}
-          </div>
-        )}
+              <button
+                className="danger"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onDelete();
+                }}
+              >
+                <Icon name="trash" size={13} />
+                Move to trash
+              </button>
+            </>
+          )}
+        </FloatingMenu>
       </div>
 
       <span className="row-chevron">
@@ -1200,7 +1336,7 @@ export default function SheetsHome({
     setSheets(current => toggleSheetFavorite(current, id));
   }
 
-  function createSet() {
+  function handleCreateSet() {
     const name = window.prompt("Set name");
 
     if (!name?.trim()) return;
@@ -1211,7 +1347,7 @@ export default function SheetsHome({
     setSelectedSet(next[next.length - 1].id);
   }
 
-  function moveSet(sourceId, targetId) {
+  function handleMoveSet(sourceId, targetId) {
     setSets(current => moveSet(current, sourceId, targetId));
   }
 
@@ -1370,8 +1506,8 @@ export default function SheetsHome({
               sets={sets}
               selected={selectedSet}
               onSelect={setSelectedSet}
-              onCreate={createSet}
-              onMove={moveSet}
+              onCreate={handleCreateSet}
+              onMove={handleMoveSet}
               draggedSet={draggedSet}
               setDraggedSet={setDraggedSet}
               onRename={renameSetById}
@@ -1657,6 +1793,37 @@ export default function SheetsHome({
       <style>{`
         * { box-sizing: border-box; }
 
+        :root {
+          --layer-base: 0;
+          --layer-sticky: 10;
+          --layer-floating: 100;
+          --layer-popover: 200;
+          --layer-panel: 300;
+          --layer-modal: 400;
+          --layer-toast: 500;
+        }
+
+        .sheets-root,
+        .sheets-root * {
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        .sheets-root button,
+        .sheets-root [role="button"] {
+          outline: none;
+        }
+
+        .sheets-root button:focus-visible,
+        .sheets-root [role="button"]:focus-visible {
+          outline: 1px solid rgba(145,181,233,.55);
+          outline-offset: 2px;
+        }
+
+        .sheets-root button:active,
+        .sheets-root [role="button"]:active {
+          -webkit-tap-highlight-color: transparent;
+        }
+
         .sheets-root {
           width: 100%;
           height: 100%;
@@ -1665,12 +1832,17 @@ export default function SheetsHome({
           background: ${COLORS.bg};
           font-family: Inter, system-ui, sans-serif;
           color: ${COLORS.text};
+          isolation: isolate;
+          position: relative;
         }
 
         .sheets-canvas {
           width: 100%;
           height: 100%;
-          min-width: 620px;
+          min-width: 0;
+          min-height: 0;
+          display: flex;
+          flex-direction: column;
           padding: 15px 20px 16px;
           background:
             radial-gradient(
@@ -1686,19 +1858,31 @@ export default function SheetsHome({
         }
 
         .topbar {
-          height: 43px;
+          position: relative;
+          z-index: var(--layer-sticky);
+          min-height: 43px;
+          height: auto;
+          flex: none;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 12px;
+          flex-wrap: wrap;
           border-bottom: 1px solid ${COLORS.line};
           padding: 0 2px 10px;
         }
 
         .topbar-left,
         .topbar-actions {
+          min-width: 0;
           display: flex;
           align-items: center;
           gap: 12px;
+        }
+
+        .topbar-actions {
+          flex: 1;
+          justify-content: flex-end;
         }
 
         button { font: inherit; }
@@ -1744,7 +1928,8 @@ export default function SheetsHome({
         }
 
         .search-box {
-          width: 260px;
+          width: min(260px, 100%);
+          min-width: 0;
           height: 31px;
           display: flex;
           align-items: center;
@@ -1781,11 +1966,11 @@ export default function SheetsHome({
         }
 
         .library-layout {
-          height: calc(100% - 43px);
-          display: grid;
-          grid-template-columns: 28% minmax(0,1fr);
-          padding-top: 13px;
+          flex: 1;
           min-height: 0;
+          display: grid;
+          grid-template-columns: minmax(145px, 28%) minmax(0, 1fr);
+          padding-top: 13px;
         }
 
         .sets-pane {
@@ -2021,7 +2206,7 @@ export default function SheetsHome({
 
         .sort-menu {
           position: absolute;
-          z-index: 5;
+          z-index: var(--layer-popover);
           right: 0;
           top: 29px;
           width: 145px;
@@ -2276,45 +2461,55 @@ export default function SheetsHome({
           color: #fff;
         }
 
-        .row-menu {
-          position: absolute;
-          top: calc(100% + 4px);
-          right: 0;
-          z-index: 30;
-          min-width: 158px;
-          padding: 4px;
+        .floating-menu-layer {
+          z-index: 10000;
+          max-width: calc(100vw - 20px);
+          overflow-x: hidden;
+          overflow-y: auto;
+          overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+
+        .floating-menu-layer.row-menu {
+          min-width: 174px;
+          padding: 5px;
           display: flex;
           flex-direction: column;
           gap: 1px;
-          border: 1px solid rgba(255,255,255,.1);
-          border-radius: 9px;
-          background: #1B2534;
-          box-shadow: 0 12px 28px rgba(0,0,0,.45);
+          border: 1px solid rgba(225,235,250,.12);
+          border-radius: 11px;
+          background: #202C3E;
+          box-shadow:
+            0 12px 34px rgba(0,0,0,.42),
+            0 2px 8px rgba(0,0,0,.25);
         }
 
-        .row-menu button {
+        .floating-menu-layer.row-menu button {
+          width: 100%;
+          min-height: 34px;
           display: flex;
           align-items: center;
-          gap: 8px;
-          height: 27px;
-          padding: 0 8px;
+          gap: 9px;
+          padding: 7px 9px;
           border: 0;
-          border-radius: 6px;
+          border-radius: 7px;
           background: transparent;
-          color: #D6DFEC;
+          color: #F0F3F8;
           font-size: 10px;
           text-align: left;
           cursor: pointer;
         }
 
-        .row-menu button:hover {
+        .floating-menu-layer.row-menu button:hover {
           background: rgba(255,255,255,.07);
-          color: #fff;
         }
 
-        .row-menu button.danger { color: #E68A8A; }
+        .floating-menu-layer.row-menu button.danger {
+          color: #E58A8A;
+        }
 
-        .row-menu button.danger:hover {
+        .floating-menu-layer.row-menu button.danger:hover {
           background: rgba(224,80,80,.14);
         }
 
@@ -2465,7 +2660,7 @@ export default function SheetsHome({
 
         .settings-popover {
           position: absolute;
-          z-index: 10;
+          z-index: var(--layer-panel);
           top: 53px;
           right: 18px;
           width: 280px;
@@ -2616,35 +2811,119 @@ export default function SheetsHome({
           color: #7D8BA0;
         }
 
+        @media (hover: none) {
+          .row-menu-button,
+          .set-menu-button {
+            opacity: 1;
+          }
+        }
+
+        .row-menu-button,
+        .set-menu-button {
+          touch-action: manipulation;
+        }
+
         @media (max-width: 700px) {
           .sheets-canvas {
-            min-width: 0;
             padding: 12px;
           }
 
           .library-layout {
-            grid-template-columns: 31% minmax(0,1fr);
+            grid-template-columns:
+              minmax(120px, 31%) minmax(0, 1fr);
           }
 
           .sets-pane { padding-right: 8px; }
           .sheets-pane { padding-left: 9px; }
 
-          .search-box { width: 190px; }
+          .sheet-list-heading {
+            grid-template-columns:
+              minmax(75px, 1fr)
+              minmax(75px, 1.1fr)
+              34px;
+            padding-right: 20px;
+          }
 
           .sheet-row {
             grid-template-columns:
-              0
-              minmax(90px,1fr)
-              minmax(105px,1fr)
-              20px
+              minmax(0, 1fr)
+              minmax(0, 1fr)
+              22px
               34px
-              18px
-              10px;
-            column-gap: 4px;
+              22px;
+            column-gap: 5px;
           }
 
-          .drag-handle { display: none; }
+          .drag-handle,
+          .row-chevron {
+            display: none;
+          }
+
           .preview { gap: 7px; }
+
+          .search-box { width: min(190px, 100%); }
+        }
+
+        @media (max-width: 430px) {
+          .sheets-canvas {
+            padding: 9px;
+          }
+
+          .topbar {
+            gap: 8px;
+          }
+
+          .topbar-left,
+          .topbar-actions {
+            gap: 7px;
+          }
+
+          .brand-label {
+            font-size: 14px;
+          }
+
+          .search-box {
+            width: min(145px, 100%);
+          }
+
+          .library-layout {
+            grid-template-columns:
+              minmax(105px, 32%) minmax(0, 1fr);
+          }
+
+          .sheets-toolbar {
+            height: auto;
+            min-height: 35px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+          }
+
+          .sheet-list-heading {
+            display: none;
+          }
+
+          .sheet-row {
+            grid-template-columns:
+              minmax(0, 1fr)
+              22px
+              34px
+              22px;
+          }
+
+          .preview {
+            display: none;
+          }
+
+          .key-pill {
+            min-width: 30px;
+          }
+
+          .settings-popover {
+            position: fixed;
+            top: 60px;
+            right: 9px;
+            width: min(280px, calc(100vw - 18px));
+          }
         }
       `}</style>
     </div>
