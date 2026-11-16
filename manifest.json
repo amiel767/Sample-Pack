@@ -154,7 +154,7 @@
       "instrument": "piano",
       "file": "black_upright.bin",
       "size": 15080731,
-      "sha256": "a0e76dc109e384c1586b7bdd7cf9a7febf930812ae2bf57fa1aae578b097acf7",
+      "sha256": "3db4024d8b6744bcac5a0767c3309729bd1346dfc39dfb426eca019dcd2b2731",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/black_upright.bin"
     },
     {
@@ -162,8 +162,8 @@
       "name": "Studio Upright",
       "instrument": "piano",
       "file": "studio_upright.bin",
-      "size": 14599077,
-      "sha256": "e9dcf225b5448626a91a5466d43fb03a904aaea2dd272ba6a3944b9bdd8bdd25",
+      "size": 26139506,
+      "sha256": "9ef7f010db917c30cd5d02a1f273be0fe43bb763c74cf86033047471de7006a8",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/studio_upright.bin"
     }
   ]
