@@ -1070,6 +1070,7 @@ function SetTree({
 }) {
   const [menuFor, setMenuFor] = useState(null);
   const [iconFor, setIconFor] = useState(null);
+  const menuButtonRefs = useRef({});
 
   const children = useMemo(() => {
     const map = {};
@@ -1090,7 +1091,14 @@ function SetTree({
   }, [sets]);
 
   function renderBranch(parentId = "root", depth = 0) {
-    return (children[parentId] || []).map(set => (
+    return (children[parentId] || []).map(set => {
+      let menuButtonRef = menuButtonRefs.current[set.id];
+      if (!menuButtonRef) {
+        menuButtonRef = React.createRef();
+        menuButtonRefs.current[set.id] = menuButtonRef;
+      }
+
+      return (
       <React.Fragment key={set.id}>
         <div
           className={`set-row ${
@@ -1138,8 +1146,10 @@ function SetTree({
 
           <button
             type="button"
+            ref={menuButtonRef}
             className="set-menu-button"
             aria-label="Set actions"
+            aria-expanded={menuFor === set.id}
             onClick={event => {
               event.stopPropagation();
               setMenuFor(menuFor === set.id ? null : set.id);
@@ -1148,44 +1158,44 @@ function SetTree({
             <Icon name="dots" size={14} />
           </button>
 
-          {menuFor === set.id && (
-            <div
-              className="row-menu set-menu"
-              onClick={event => event.stopPropagation()}
+          <FloatingMenu
+            open={menuFor === set.id}
+            anchorRef={menuButtonRef}
+            onClose={() => setMenuFor(null)}
+            className="row-menu set-menu"
+          >
+            <button
+              onClick={() => {
+                setMenuFor(null);
+                const name = window.prompt("Set name", set.name);
+                if (name != null) onRename(set.id, name);
+              }}
             >
-              <button
-                onClick={() => {
-                  setMenuFor(null);
-                  const name = window.prompt("Set name", set.name);
-                  if (name != null) onRename(set.id, name);
-                }}
-              >
-                <Icon name="pencil" size={13} />
-                Rename
-              </button>
+              <Icon name="pencil" size={13} />
+              Rename
+            </button>
 
-              <button
-                onClick={() => {
-                  setMenuFor(null);
-                  setIconFor(set.id);
-                }}
-              >
-                <Icon name="palette" size={13} />
-                Change icon
-              </button>
+            <button
+              onClick={() => {
+                setMenuFor(null);
+                setIconFor(set.id);
+              }}
+            >
+              <Icon name="palette" size={13} />
+              Change icon
+            </button>
 
-              <button
-                className="danger"
-                onClick={() => {
-                  setMenuFor(null);
-                  onDelete(set.id);
-                }}
-              >
-                <Icon name="trash" size={13} />
-                Delete set
-              </button>
-            </div>
-          )}
+            <button
+              className="danger"
+              onClick={() => {
+                setMenuFor(null);
+                onDelete(set.id);
+              }}
+            >
+              <Icon name="trash" size={13} />
+              Delete set
+            </button>
+          </FloatingMenu>
 
           {iconFor === set.id && (
             <div
@@ -1211,7 +1221,8 @@ function SetTree({
 
         {renderBranch(set.id, depth + 1)}
       </React.Fragment>
-    ));
+      );
+    });
   }
 
   return (
@@ -1286,6 +1297,7 @@ export default function SheetsHome({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sort, setSort] = useState("modified");
   const [sortOpen, setSortOpen] = useState(false);
+  const sortButtonRef = useRef(null);
 
   const [draggedSet, setDraggedSet] = useState(null);
   const [draggedSheet, setDraggedSheet] = useState(null);
@@ -1575,7 +1587,9 @@ export default function SheetsHome({
 
                 <div className="sort-wrap">
                   <button
+                    ref={sortButtonRef}
                     className="sort-button"
+                    aria-expanded={sortOpen}
                     onClick={() =>
                       setSortOpen(value => !value)
                     }
@@ -1595,24 +1609,27 @@ export default function SheetsHome({
                     </span>
                   </button>
 
-                  {sortOpen && (
-                    <div className="sort-menu">
-                      {SHEET_SORT_OPTIONS.map(option => (
-                        <button
-                          key={option.id}
-                          className={
-                            sort === option.id ? "chosen" : ""
-                          }
-                          onClick={() => {
-                            setSort(option.id);
-                            setSortOpen(false);
-                          }}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <FloatingMenu
+                    open={sortOpen}
+                    anchorRef={sortButtonRef}
+                    onClose={() => setSortOpen(false)}
+                    className="sort-menu"
+                  >
+                    {SHEET_SORT_OPTIONS.map(option => (
+                      <button
+                        key={option.id}
+                        className={
+                          sort === option.id ? "chosen" : ""
+                        }
+                        onClick={() => {
+                          setSort(option.id);
+                          setSortOpen(false);
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </FloatingMenu>
                 </div>
 
                 <button
@@ -2204,12 +2221,10 @@ export default function SheetsHome({
           margin-left: 2px;
         }
 
-        .sort-menu {
-          position: absolute;
-          z-index: var(--layer-popover);
-          right: 0;
-          top: 29px;
+        .floating-menu-layer.sort-menu {
+          box-sizing: border-box;
           width: 145px;
+          max-width: min(145px, calc(100vw - 20px));
           padding: 5px;
           border: 1px solid rgba(255,255,255,.1);
           border-radius: 9px;
@@ -2298,7 +2313,11 @@ export default function SheetsHome({
           padding: 0 7px 0 4px;
           border-bottom: 1px solid
             rgba(225,235,250,.075);
-          background: transparent;
+          background: linear-gradient(
+            180deg,
+            rgba(255,255,255,.016),
+            rgba(255,255,255,.006)
+          );
           cursor: pointer;
           transition: background .14s ease;
         }
@@ -2516,8 +2535,6 @@ export default function SheetsHome({
           background: rgba(224,80,80,.14);
         }
 
-        .set-menu { left: 8px; right: auto; }
-
         .icon-picker {
           position: absolute;
           top: calc(100% + 4px);
@@ -2664,10 +2681,13 @@ export default function SheetsHome({
         .settings-popover {
           position: absolute;
           z-index: var(--layer-panel);
-          top: 53px;
-          right: 18px;
-          width: 280px;
-          padding: 14px;
+          top: 48px;
+          right: 8px;
+          width: 248px;
+          max-width: calc(100vw - 16px);
+          max-height: calc(100vh - 64px);
+          overflow-y: auto;
+          padding: 12px;
           border: 1px solid rgba(255,255,255,.12);
           border-radius: 13px;
           background: linear-gradient(
@@ -2684,8 +2704,8 @@ export default function SheetsHome({
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 14px;
-          font-size: 12px;
+          margin-bottom: 10px;
+          font-size: 11px;
         }
 
         .popover-title button {
@@ -2744,7 +2764,7 @@ export default function SheetsHome({
           box-shadow: 0 1px 3px rgba(0,0,0,.35);
         }
 
-        .melody-label { margin-top: 15px; }
+        .melody-label { margin-top: 11px; }
 
         .switch-row {
           width: 100%;
@@ -2806,8 +2826,8 @@ export default function SheetsHome({
         }
 
         .setting-note {
-          margin: 12px 0 0;
-          padding-top: 9px;
+          margin: 9px 0 0;
+          padding-top: 8px;
           border-top: 1px solid ${COLORS.line};
           font-size: 8px;
           line-height: 1.45;
@@ -2925,7 +2945,9 @@ export default function SheetsHome({
             position: fixed;
             top: 60px;
             right: 9px;
-            width: min(280px, calc(100vw - 18px));
+            width: min(248px, calc(100vw - 18px));
+            max-height: calc(100vh - 72px);
+            overflow-y: auto;
           }
         }
       `}</style>
