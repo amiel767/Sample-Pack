@@ -2409,7 +2409,7 @@ export default function SheetsHome({
         }
 
         .preview-hybrid .preview-chord:nth-child(odd) {
-          color: #E0C69B;
+          color: ${COLORS.accent};
         }
 
         .favorite-button {
@@ -2425,7 +2425,7 @@ export default function SheetsHome({
 
         .favorite-button:hover,
         .favorite-button.is-favorite {
-          color: #D6B36E;
+          color: ${COLORS.accent};
         }
 
         .key-pill {
