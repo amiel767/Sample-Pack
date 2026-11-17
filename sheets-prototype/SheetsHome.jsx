@@ -2414,12 +2414,8 @@ export default function SheetsHome({
           padding: 4px 5px;
           text-align: center;
           border-radius: 6px;
-          background: linear-gradient(
-            180deg,
-            #303D52,
-            #222E40
-          );
-          border: 1px solid rgba(255,255,255,.08);
+          background: #22303F;
+          border: 1px solid rgba(255,255,255,.07);
           color: #E1EAF7;
           font-family: "IBM Plex Mono", monospace;
           font-size: 9px;
@@ -2463,6 +2459,7 @@ export default function SheetsHome({
 
         .floating-menu-layer {
           z-index: 10000;
+          box-sizing: border-box;
           max-width: calc(100vw - 20px);
           overflow-x: hidden;
           overflow-y: auto;
@@ -2472,11 +2469,14 @@ export default function SheetsHome({
         }
 
         .floating-menu-layer.row-menu {
+          box-sizing: border-box;
+          width: 184px;
           min-width: 174px;
+          max-width: min(184px, calc(100vw - 20px));
           padding: 5px;
           display: flex;
           flex-direction: column;
-          gap: 1px;
+          gap: 2px;
           border: 1px solid rgba(225,235,250,.12);
           border-radius: 11px;
           background: #202C3E;
@@ -2486,7 +2486,9 @@ export default function SheetsHome({
         }
 
         .floating-menu-layer.row-menu button {
+          box-sizing: border-box;
           width: 100%;
+          min-width: 0;
           min-height: 34px;
           display: flex;
           align-items: center;
@@ -2498,6 +2500,7 @@ export default function SheetsHome({
           color: #F0F3F8;
           font-size: 10px;
           text-align: left;
+          white-space: nowrap;
           cursor: pointer;
         }
 
