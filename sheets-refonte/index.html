@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sheets - refonte (captures)</title>
+<style>
+  :root{--bg:#0d0f13;--panel:#161a21;--panel2:#1e232c;--line:#2b313c;
+        --ink:#e8ecf2;--dim:#8b95a5;--gold:#f2b84a;--accent:#91b5e9;}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 700px at 20% -10%,#1a1f28,#0d0f13 60%);
+       color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+       padding:28px 18px 60px}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:22px;margin:0 0 4px}
+  h1 b{color:var(--gold)}
+  .sub{color:var(--dim);margin:0 0 22px;font-size:13.5px}
+  h2{font-size:13px;text-transform:uppercase;letter-spacing:1.4px;color:var(--gold);
+     margin:30px 0 12px;font-weight:700}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .shot{margin:0;background:linear-gradient(180deg,var(--panel2),var(--panel));
+        border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;
+        flex-direction:column;gap:7px}
+  .shot img{display:block;width:100%;border-radius:7px;background:#0a0c10}
+  .shot a{display:block;line-height:0}
+  figcaption{color:var(--dim);font-size:11.5px;line-height:1.45}
+  figcaption b{color:var(--ink);display:block;margin-bottom:2px;font-size:12.5px}
+  .tag{display:inline-block;background:#20262f;border:1px solid var(--line);border-radius:6px;
+       padding:1px 7px;font-size:11px;color:var(--dim);margin-left:5px}
+  .gif{margin:0;background:linear-gradient(180deg,var(--panel2),var(--panel));
+       border:1px solid var(--line);border-radius:12px;padding:10px}
+  .gif img{display:block;width:100%;border-radius:8px}
+  .note{background:#141821;border:1px solid var(--line);border-left:3px solid var(--gold);
+        border-radius:8px;padding:12px 14px;color:var(--dim);font-size:13px;margin:0 0 22px}
+  .note b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sheets - <b>refonte</b></h1>
+  <p class="sub">5 etats rendus par le vrai ecran Android (Views/XML, Robolectric + Roborazzi,
+     hors emulateur). Cliquer une vignette pour l'image pleine (PNG 2340x1080).</p>
+  <p class="note">Ecran <b>SheetsActivity</b> (package <b>com.aetherkeys.sheets.library</b>),
+     traduction de <b>SheetsHome.jsx</b>. Integre a l'app Compose, ouvert depuis l'en-tete Sheets.</p>
+  <h2>Animation <span class="tag">5 etats</span></h2>
+  <figure class="gif"><img src="sheets-refonte.gif" alt="Refonte Sheets"></figure>
+  <h2>Ecrans <span class="tag">5</span></h2>
+  <div class="grid">
+    <figure class="shot">
+      <a href="sheets_library_home.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_home.png" alt="Bibliotheque"></a>
+      <figcaption><b>Bibliotheque</b><span>Deux volets : filtres systeme + arbre de Sets a gauche, liste des feuilles a droite.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_library_set.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_set.png" alt="Set ouvert"></a>
+      <figcaption><b>Set ouvert</b><span>Ouvrir un Set filtre la liste sur ses feuilles ; la feuille porte sa cle et sa progression.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_library_favorites.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_favorites.png" alt="Favoris"></a>
+      <figcaption><b>Favoris</b><span>Le filtre Favoris ne garde que les feuilles marquees.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_library_search.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_search.png" alt="Recherche"></a>
+      <figcaption><b>Recherche</b><span>Une recherche reduit la liste a une seule feuille, avec son apercu d'accords.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_library_trash.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_trash.png" alt="Corbeille"></a>
+      <figcaption><b>Corbeille</b><span>Vue a part : feuilles supprimees, restauration par ligne et vidage.</span></figcaption>
+    </figure>
+  </div>
+</div>
+</body>
+</html>
