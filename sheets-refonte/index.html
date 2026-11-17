@@ -38,33 +38,46 @@
 <body>
 <div class="wrap">
   <h1>Sheets - <b>refonte</b></h1>
-  <p class="sub">5 etats rendus par le vrai ecran Android (Views/XML, Robolectric + Roborazzi,
-     hors emulateur). Cliquer une vignette pour l'image pleine (PNG 2340x1080).</p>
-  <p class="note">Ecran <b>SheetsActivity</b> (package <b>com.aetherkeys.sheets.library</b>),
-     traduction de <b>SheetsHome.jsx</b>. Integre a l'app Compose, ouvert depuis l'en-tete Sheets.</p>
-  <h2>Animation <span class="tag">5 etats</span></h2>
+  <p class="sub">8 etats rendus par le vrai ecran Android (Compose, Robolectric + Roborazzi,
+     hors emulateur). Cliquer une vignette pour l'image pleine (PNG 2450x1130).</p>
+  <p class="note">Ecran <b>SheetsHomeScreen</b> (package <b>com.aetherkeys.sheets</b>),
+     traduction Compose de <b>SheetsHome.jsx</b> (paquet <b>sheets-redesign</b>).
+     Integre a l'app : ouvert depuis le bouton Sheets du mixer.</p>
+  <h2>Animation <span class="tag">8 etats</span></h2>
   <figure class="gif"><img src="sheets-refonte.gif" alt="Refonte Sheets"></figure>
-  <h2>Ecrans <span class="tag">5</span></h2>
+  <h2>Ecrans <span class="tag">8</span></h2>
   <div class="grid">
     <figure class="shot">
-      <a href="sheets_library_home.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_home.png" alt="Bibliotheque"></a>
-      <figcaption><b>Bibliotheque</b><span>Deux volets : filtres systeme + arbre de Sets a gauche, liste des feuilles a droite.</span></figcaption>
+      <a href="sheets_refonte_01_all.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_01_all.png" alt="Bibliotheque"></a>
+      <figcaption><b>Bibliotheque</b><span>Deux volets : collections (All, Favorites, Default + Sets) a gauche, liste des feuilles et apercu d'accords a droite.</span></figcaption>
     </figure>
     <figure class="shot">
-      <a href="sheets_library_set.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_set.png" alt="Set ouvert"></a>
-      <figcaption><b>Set ouvert</b><span>Ouvrir un Set filtre la liste sur ses feuilles ; la feuille porte sa cle et sa progression.</span></figcaption>
+      <a href="sheets_refonte_02_favorites.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_02_favorites.png" alt="Favoris"></a>
+      <figcaption><b>Favoris</b><span>Le filtre Favoris ne garde que les feuilles marquees (2).</span></figcaption>
     </figure>
     <figure class="shot">
-      <a href="sheets_library_favorites.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_favorites.png" alt="Favoris"></a>
-      <figcaption><b>Favoris</b><span>Le filtre Favoris ne garde que les feuilles marquees.</span></figcaption>
+      <a href="sheets_refonte_03_set.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_03_set.png" alt="Set ouvert"></a>
+      <figcaption><b>Set ouvert</b><span>Ouvrir un Set (Live set) filtre la liste sur ses feuilles.</span></figcaption>
     </figure>
     <figure class="shot">
-      <a href="sheets_library_search.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_search.png" alt="Recherche"></a>
-      <figcaption><b>Recherche</b><span>Une recherche reduit la liste a une seule feuille, avec son apercu d'accords.</span></figcaption>
-    </figure>
-    <figure class="shot">
-      <a href="sheets_library_trash.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_library_trash.png" alt="Corbeille"></a>
+      <a href="sheets_refonte_04_trash.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_04_trash.png" alt="Corbeille"></a>
       <figcaption><b>Corbeille</b><span>Vue a part : feuilles supprimees, restauration par ligne et vidage.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_refonte_05_settings.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_05_settings.png" alt="Reglages"></a>
+      <figcaption><b>Reglages</b><span>Dialogue : notation d'accords (Letters / Nashville) et noms de notes en mode Nashville.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_refonte_06_search.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_06_search.png" alt="Recherche"></a>
+      <figcaption><b>Recherche</b><span>Une recherche ("Salt") reduit la liste a une seule feuille, avec son apercu d'accords.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_refonte_07_sort.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_07_sort.png" alt="Tri"></a>
+      <figcaption><b>Tri</b><span>Menu de tri : Recently modified / created, Name A-Z / Z-A, Custom order.</span></figcaption>
+    </figure>
+    <figure class="shot">
+      <a href="sheets_refonte_08_set_menu.png" target="_blank" rel="noopener"><img loading="lazy" src="sheets_refonte_08_set_menu.png" alt="Menu de Set"></a>
+      <figcaption><b>Menu de Set</b><span>Menu contextuel d'un Set : Rename, Change icon, Delete set.</span></figcaption>
     </figure>
   </div>
 </div>
