@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "version": 1,
-  "updated": "2026-11-14",
+  "version": 2,
+  "updated": "2026-11-19",
   "base_url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/",
   "packs": [
     {
@@ -228,6 +228,87 @@
       "size": 101933,
       "sha256": "fb0e674702123eb510f6e456a79268b3ce150741b0c7c780205df6b6058b013c",
       "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/drumstation_newstage.zip"
+    },
+    {
+      "id": "piano.royal_grand",
+      "name": "Royal Grand 3D",
+      "instrument": "piano",
+      "file": "royal_grand.bin",
+      "size": 32315292,
+      "sha256": "75a9006f375656257282620f5194586682492be58996ab5b374468db44e3968a",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/royal_grand.bin"
+    },
+    {
+      "id": "piano.cinematic_grand",
+      "name": "Cinematic Grand",
+      "instrument": "piano",
+      "file": "cinematic_grand.bin",
+      "size": 31338946,
+      "sha256": "c674161f5d86d98f0c4fbf4b8ec31a7829b8716013f186c0c879204687e29c63",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/cinematic_grand.bin"
+    },
+    {
+      "id": "piano.chapel_upright",
+      "name": "Chapel Upright",
+      "instrument": "piano",
+      "file": "chapel_upright.bin",
+      "size": 25477017,
+      "sha256": "cc0bbc4b0dc20a13e139df187d2b65f2eee4561e551e238e2dd9a7d3acfa7460",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/chapel_upright.bin"
+    },
+    {
+      "id": "pad.ambient",
+      "name": "Ambient Pad",
+      "instrument": "pad",
+      "file": "ambient_pad.bin",
+      "size": 3995597,
+      "sha256": "65f4f6649d068777e39729b134970280bda2f393702a03310e1da9fbf66dc87a",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/ambient_pad.bin"
+    },
+    {
+      "id": "pad.oceans",
+      "name": "Oceans Pad",
+      "instrument": "pad",
+      "file": "oceans_pad.bin",
+      "size": 4042287,
+      "sha256": "41d86d6969e53161aff91d45e367e9e7473dd5bc68e1380dbfa4d5a514e995a2",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/oceans_pad.bin"
+    },
+    {
+      "id": "pad.hillsong",
+      "name": "Hillsong Pad",
+      "instrument": "pad",
+      "file": "hillsong_pad.bin",
+      "size": 5603692,
+      "sha256": "4588d98d8ee61353cc23d39febbb4d87eb16eca954984c2da675acc8adee7ea8",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/hillsong_pad.bin"
+    },
+    {
+      "id": "pad.particles",
+      "name": "Particles Pad",
+      "instrument": "pad",
+      "file": "particles_pad.bin",
+      "size": 6801753,
+      "sha256": "ae4976f86b67afdc40e9c87c7a3bd1aec0da9f2436994655e1204f28131ba863",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/particles_pad.bin"
+    },
+    {
+      "id": "pad.big_shimmer",
+      "name": "Big Shimmer",
+      "instrument": "pad",
+      "file": "big_shimmer.bin",
+      "size": 2099577,
+      "sha256": "e42d0d34f6e31bc58b0266fe148ea44d0b40afda63c982cfefa0641e7bf469ff",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/big_shimmer.bin"
+    },
+    {
+      "id": "pad.reverse_piano",
+      "name": "Reverse Piano",
+      "instrument": "pad",
+      "file": "reverse_piano.bin",
+      "size": 4553833,
+      "sha256": "1e7579fbeadb3e55e24d3affa5ee729c2e4ed88012e04ec4601eae02bc0a18a9",
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/reverse_piano.bin"
     }
   ]
 }
