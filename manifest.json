@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": 4,
+  "version": 5,
   "updated": "2026-11-19",
   "base_url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/",
   "packs": [
@@ -204,12 +204,12 @@
     },
     {
       "id": "pad.synth",
-      "name": "Synth Pad",
+      "name": "Synth",
       "instrument": "pad",
-      "file": "synth_pad.bin",
+      "file": "synth.bin",
       "size": 6432820,
       "sha256": "f19e10e2c1b6d0ca8fca7594a29b4ed8897143cd6ab3e3248d48fbd2996ad4d8",
-      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/synth_pad.bin"
+      "url": "https://github.com/amiel767/Sample-Pack/releases/download/v1/synth.bin"
     },
     {
       "id": "pad.worship",
